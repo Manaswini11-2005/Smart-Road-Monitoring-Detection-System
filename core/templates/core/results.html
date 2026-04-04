@@ -1,0 +1,58 @@
+{% extends 'core/base.html' %}
+{% block content %}
+<div class="glass-panel p-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="text-info text-uppercase"><i class="fas fa-database me-3"></i>NEURAL ARCHIVE: DETECTION LOGS</h4>
+        <a href="{% url 'export_report' %}" class="btn btn-outline-info btn-sm"><i class="fas fa-file-pdf me-2"></i>GENERATE MISSION REPORT</a>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover align-middle text-white border-secondary">
+            <thead class="bg-dark text-info text-uppercase">
+                <tr>
+                    <th class="border-secondary">ID</th>
+                    <th class="border-secondary">Type</th>
+                    <th class="border-secondary">Severity</th>
+                    <th class="border-secondary">Confidence</th>
+                    <th class="border-secondary">GPS Coords</th>
+                    <th class="border-secondary">Timestamp</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in detections %}
+                <tr class="border-secondary">
+                    <td class="text-muted">#{{ log.id }}</td>
+                    <td><span class="badge bg-primary px-3">{{ log.damage_type }}</span></td>
+                    <td>
+                        <span class="badge {% if log.severity == 'High' %}bg-danger{% elif log.severity == 'Medium' %}bg-warning{% else %}bg-success{% endif %} px-3">
+                            {{ log.severity }}
+                        </span>
+                    </td>
+                    <td class="font-monospace text-info">{{ log.confidence|floatformat:4 }}</td>
+                    <td class="small opacity-75">{{ log.latitude }}, {{ log.longitude }}</td>
+                    <td class="small">{{ log.timestamp|date:"M d, Y H:i" }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center py-5 opacity-50">NO ANOMALIES RECORDED IN DATABASE</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if is_paginated %}
+    <nav>
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+            <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a></li>
+            {% endif %}
+            <li class="page-item active"><span class="page-link">{{ page_obj.number }}</span></li>
+            {% if page_obj.has_next %}
+            <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a></li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}

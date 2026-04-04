@@ -1,0 +1,139 @@
+{% extends 'core/base.html' %}
+{% block extra_head %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+    #map { height: 450px; border-radius: 15px; border: 1px solid var(--glass-border); }
+    .health-gauge {
+        width: 150px; height: 150px;
+        position: relative;
+        margin: 0 auto;
+    }
+    .gauge-svg { transform: rotate(-90deg); }
+    .gauge-bg { fill: none; stroke: rgba(255,255,255,0.1); stroke-width: 10; }
+    .gauge-value { 
+        fill: none; stroke: var(--accent-blue); stroke-width: 10; 
+        stroke-dasharray: 440; 
+        stroke-dashoffset: calc(440 - (440 * {{ road_health_score }}) / 100);
+        transition: stroke-dashoffset 1s ease-in-out;
+        filter: drop-shadow(0 0 5px var(--accent-blue));
+    }
+    .stats-val { font-size: 2.5rem; font-weight: 700; color: var(--accent-blue); text-shadow: 0 0 10px rgba(0, 210, 255, 0.5); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h2 class="mb-4 d-flex align-items-center">
+            <i class="fas fa-terminal me-3 text-info"></i> SYSTEM COMMAND CENTER
+        </h2>
+    </div>
+</div>
+
+<div class="row mb-5 g-4 text-center">
+    <div class="col-md-4">
+        <div class="glass-panel p-4 h-100">
+            <h5 class="text-uppercase opacity-75">Road Health Index</h5>
+            <div class="health-gauge my-3">
+                <svg class="gauge-svg" viewBox="0 0 160 160">
+                    <circle class="gauge-bg" cx="80" cy="80" r="70"></circle>
+                    <circle class="gauge-value" cx="80" cy="80" r="70"></circle>
+                </svg>
+                <div class="position-absolute top-50 start-50 translate-middle">
+                    <h3 class="mb-0 fw-bold">{{ road_health_score }}%</h3>
+                </div>
+            </div>
+            <p class="mb-0 text-{{ health_color }} fw-bold">{{ health_status }}</p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="glass-panel p-4 h-100 d-flex flex-column justify-content-center">
+            <h5 class="text-uppercase opacity-75">Active Detections</h5>
+            <div class="stats-val">{{ total_detections }}</div>
+            <p class="mb-0">Across All Routes</p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="glass-panel p-4 h-100 d-flex flex-column justify-content-center">
+            <h5 class="text-uppercase opacity-75">System Status</h5>
+            <div class="stats-val text-success">ONLINE</div>
+            <p class="mb-0"><i class="fas fa-microchip me-1"></i> AI Neural Engine Active</p>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-5 g-4">
+    <div class="col-lg-7">
+        <div class="glass-panel p-4 h-100">
+            <h5 class="card-title mb-4"><i class="fas fa-map-marked-alt me-2 text-primary"></i> GEOSPATIAL HAZARD MAP</h5>
+            <div id="map"></div>
+        </div>
+    </div>
+    <div class="col-lg-5">
+        <div class="glass-panel p-4 h-100">
+            <h5 class="card-title mb-4"><i class="fas fa-chart-line me-2 text-info"></i> SEVERITY ANALYTICS</h5>
+            <canvas id="severityChart"></canvas>
+            <hr class="border-secondary my-4">
+            <canvas id="typeChart" height="200"></canvas>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    Chart.defaults.color = '#fff';
+    Chart.defaults.borderColor = 'rgba(255,255,255,0.1)';
+
+    // Severity Chart
+    const sevCtx = document.getElementById('severityChart').getContext('2d');
+    new Chart(sevCtx, {
+        type: 'bar',
+        data: {
+            labels: {{ severity_labels|safe }},
+            datasets: [{
+                label: 'Count',
+                data: {{ severity_data|safe }},
+                backgroundColor: ['#00d2ff', '#9d50bb', '#e74a3b'],
+                borderRadius: 5
+            }]
+        },
+        options: { plugins: { legend: { display: false } } }
+    });
+
+    // Type Chart
+    const typeCtx = document.getElementById('typeChart').getContext('2d');
+    new Chart(typeCtx, {
+        type: 'doughnut',
+        data: {
+            labels: {{ type_labels|safe }},
+            datasets: [{
+                data: {{ type_data|safe }},
+                backgroundColor: ['#00d2ff', '#9d50bb', '#36b9cc', '#f6c23e'],
+                borderWidth: 0, hoverOffset: 10
+            }]
+        },
+        options: { cutout: '70%', plugins: { legend: { position: 'bottom' } } }
+    });
+
+    // Map Initialization
+    var map = L.map('map').setView([12.9716, 77.5946], 13);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
+    
+    // Real Data Rendering
+    const potholeData = [
+        {% for pothole in potholes_list %}
+        { lat: {{ pothole.latitude }}, lng: {{ pothole.longitude }}, sev: "{{ pothole.severity }}" },
+        {% endfor %}
+    ];
+
+    potholeData.forEach(p => {
+        const color = p.sev === 'High' ? '#ff3d00' : p.sev === 'Medium' ? '#ffea00' : '#00e676';
+        L.circleMarker([p.lat, p.lng], {
+            radius: 8, fillColor: color, color: "#fff", weight: 1, opacity: 1, fillOpacity: 0.8
+        }).addTo(map).bindPopup(`<b>Hazard Detected</b><br>Severity: ${p.sev}`);
+    });
+</script>
+{% endblock %}

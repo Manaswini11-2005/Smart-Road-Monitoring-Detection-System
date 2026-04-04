@@ -1,0 +1,13 @@
+django
+mysqlclient
+opencv-python
+ultralytics
+tensorflow
+pyttsx3
+reportlab
+django-crispy-forms
+crispy-bootstrap5
+matplotlib
+pandas
+requests
+folium
