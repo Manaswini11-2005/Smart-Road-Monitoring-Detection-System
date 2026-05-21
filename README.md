@@ -1,14 +1,5 @@
-# Execution Guide: Smart Road Monitoring & Detection System
+# Execution Guide: Ai car with real time detection of damaged road and lane detection!
 
-
-## Python
-Django / Flask (if used)
-REST API
-MySQL
-Software Development
-Backend
-Data Processing
-Problem Solving
 
 ## 1. Prerequisites
 - Python 3.9+
