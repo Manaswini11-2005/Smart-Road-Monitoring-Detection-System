@@ -1,4 +1,14 @@
-# Execution Guide: AI-Based Smart Vehicle System
+# Execution Guide: Smart Road Monitoring & Detection System
+
+
+## Python
+Django / Flask (if used)
+REST API
+MySQL
+Software Development
+Backend
+Data Processing
+Problem Solving
 
 ## 1. Prerequisites
 - Python 3.9+
